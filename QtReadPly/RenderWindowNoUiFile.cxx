@@ -19,25 +19,19 @@
 #include <QSurfaceFormat>
 #include <QVTKOpenGLNativeWidget.h>
 
-int main(int argc, char** argv)
-{
-  // needed to ensure appropriate OpenGL context is created for VTK rendering.
-  QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
 
-  QApplication app(argc, argv);
-
-  QVTKOpenGLNativeWidget widget;
+void initVtk(QVTKOpenGLNativeWidget *widget){
 
   vtkNew<vtkNamedColors> colors;
 
   vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
 #if VTK890
-  widget.setRenderWindow(renderWindow);
+  widget->setRenderWindow(renderWindow);
 #else
-  widget.SetRenderWindow(renderWindow);
+  widget->SetRenderWindow(renderWindow);
 #endif
 
-  widget.resize(600, 600);
+  widget->resize(600, 600);
 
   vtkNew<vtkPLYReader> reader;
 
@@ -56,14 +50,40 @@ int main(int argc, char** argv)
   renderer->SetBackground(colors->GetColor3d("SeaGreen").GetData());
 
 #if VTK890
-  widget.renderWindow()->AddRenderer(renderer);
-  widget.renderWindow()->SetWindowName("RenderWindowNoUIFile");
+  widget->renderWindow()->AddRenderer(renderer);
+  widget->renderWindow()->SetWindowName("RenderWindowNoUIFile");
 #else
-  widget.GetRenderWindow()->AddRenderer(renderer);
-  widget.GetRenderWindow()->SetWindowName("RenderWindowNoUIFile");
+  widget->GetRenderWindow()->AddRenderer(renderer);
+  widget->GetRenderWindow()->SetWindowName("RenderWindowNoUIFile");
 #endif
-  widget.show();
+}
 
+class Absolute : public QWidget {
+
+ public:
+     Absolute(QWidget *parent = nullptr);
+};
+
+Absolute::Absolute(QWidget *parent)
+    : QWidget(parent) {
+
+  auto *v = new QVTKOpenGLNativeWidget(this);
+  initVtk(v);
+  v->setGeometry(5, 5, 200, 150);
+}
+
+
+int main(int argc, char** argv)
+{
+  // needed to ensure appropriate OpenGL context is created for VTK rendering.
+  QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
+
+  QApplication app(argc, argv);
+
+  Absolute window;
+
+  window.setWindowTitle("Absolute");
+  window.show();
 
   app.exec();
 
